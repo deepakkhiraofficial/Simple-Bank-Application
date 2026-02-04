@@ -1,126 +1,128 @@
-import java.util.Scanner;
+import java.util.*;
 
-abstract class Bank {
-    public String name = "uco bank";
-    public String IFSCCODE = "UCBA0001544";
+class BankService extends Bank implements Transaction {
 
-    public void bankdetails() {
-        System.out.println("Bank: " + name + " | IFSC CODE: " + IFSCCODE);
+    private double balance;
+    private final int PASSWORD = 9109;
+    private List<String> transactions = new ArrayList<>();
+
+    static Scanner sc = new Scanner(System.in);
+
+    BankService(double balance) {
+        this.balance = balance;
     }
 
-    abstract void deposit();
+    private boolean authenticate() {
+        System.out.print("Enter password: ");
+        return sc.nextInt() == PASSWORD;
+    }
 
-    abstract void withdraw();
+    @Override
+    public void deposit() {
+        if (!authenticate()) {
+            System.out.println("Authentication Failed");
+            return;
+        }
 
-    abstract void checkbalance();
+        try {
+            System.out.print("Enter deposit amount: ");
+            double amt = sc.nextDouble();
 
-    abstract void bankdetaile();
+            if (amt <= 0)
+                throw new IllegalArgumentException("Invalid Amount");
+
+            balance += amt;
+            transactions.add("Deposited: " + amt);
+            System.out.println("Balance: " + balance);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void withdraw() {
+        if (!authenticate()) return;
+
+        System.out.print("Enter withdraw amount: ");
+        double amt = sc.nextDouble();
+
+        if (amt > balance) {
+            System.out.println("Insufficient Balance");
+            return;
+        }
+
+        balance -= amt;
+        transactions.add("Withdrawn: " + amt);
+        System.out.println("Remaining Balance: " + balance);
+    }
+
+    @Override
+    void checkBalance() {
+        if (authenticate())
+            System.out.println("Current Balance: " + balance);
+    }
+
+    @Override
+    void showCustomerDetails() {
+        if (authenticate()) {
+            System.out.println("Name: Deepak Kushwah");
+            System.out.println("Account Type: Savings");
+            System.out.println("Branch: Shukalhari");
+        }
+    }
+
+    void showTransactionHistory() {
+        if (authenticate()) {
+            for (String t : transactions)
+                System.out.println(t);
+        }
+    }
 }
 
-class BankService extends Bank {
-    private double bal = 10000;
-    private int pwd;
 
-    public void deposit() {
-        System.out.print("Enter your bank password: ");
-        Scanner s = new Scanner(System.in);
-        pwd = s.nextInt();
+interface Transaction {
+    void deposit();
+    void withdraw();
+}
+abstract class Bank {
+    protected String bankName = "UCO Bank";
+    protected String ifsc = "UCBA0001544";
 
-        if (pwd == 9109) {
-            System.out.print("Enter your deposit amount: ");
-            double money = s.nextDouble();
-            bal += money;
-            System.out.println("Deposit amount: " + money);
-            System.out.println("Total balance: " + bal);
-        } else {
-            System.out.println("Incorrect bank password.");
-        }
+    void bankDetails() {
+        System.out.println(bankName + " | IFSC: " + ifsc);
     }
 
-    public void withdraw() {
-        System.out.print("Enter your password: ");
-        Scanner s = new Scanner(System.in);
-        pwd = s.nextInt();
-
-        if (pwd == 9109) {
-            System.out.print("Enter your withdraw amount: ");
-            double money = s.nextDouble();
-            if (bal >= money) {
-                bal -= money;
-                System.out.println("Withdraw amount: " + money);
-                System.out.println("Total balance: " + bal);
-            } else {
-                System.out.println("Insufficient balance.");
-            }
-        } else {
-            System.out.println("Incorrect password.");
-        }
-    }
-
-    public void checkbalance() {
-        System.out.print("Enter your password: ");
-        Scanner s = new Scanner(System.in);
-        pwd = s.nextInt();
-
-        if (pwd == 9109) {
-            System.out.println("Total balance: " + bal);
-        } else {
-            System.out.println("Incorrect password.");
-        }
-    }
-
-    public void bankdetaile() {
-        System.out.print("Enter your bank password: ");
-        Scanner s = new Scanner(System.in);
-        pwd = s.nextInt();
-
-        if (pwd == 9109) {
-            System.out.println("Customer Name: DEEPAK KUSHWAH");
-            System.out.println("Account Type: SAVINGS");
-            System.out.println("Father's Name: NANDRAM KUSHWAH");
-            System.out.println("Mother's Name: RAJPATI KUSHWAH");
-            System.out.println("Address: RAMGARH KUSHWAH CHHATRAVASH DABDRA GWALIOR MP (475110)");
-            System.out.println("Aadhar No.: 959624878125");
-            System.out.println("Account No.: 15443211013297");
-            System.out.println("IFSC Code: UCBA0001544");
-            System.out.println("Mobile No.: 9109001109");
-            System.out.println("Branch Name: SHUKALHARI");
-        } else {
-            System.out.println("Incorrect password.");
-        }
-    }
+    abstract void checkBalance();
+    abstract void showCustomerDetails();
 }
 
 class Main {
     public static void main(String[] args) {
-        BankService b = new BankService();
-        b.bankdetails();
-        Scanner s = new Scanner(System.in);
+
+        Transaction bank = new BankService(10000);
+        Scanner sc = new Scanner(System.in);
         int ch;
 
         do {
-            System.out.println("\n1. Deposit");
-            System.out.println("2. Withdraw");
-            System.out.println("3. Check balance");
-            System.out.println("4. Details");
-            System.out.print("Enter your choice: ");
-            ch = s.nextInt();
+            System.out.println("\n1 Deposit");
+            System.out.println("2 Withdraw");
+            System.out.println("3 Balance");
+            System.out.println("4 Details");
+            System.out.println("5 Transactions");
+            System.out.println("0 Exit");
+            System.out.print("Choice: ");
+
+            ch = sc.nextInt();
 
             switch (ch) {
-                case 1:
-                    b.deposit();
-                    break;
-                case 2:
-                    b.withdraw();
-                    break;
-                case 3:
-                    b.checkbalance();
-                    break;
-                case 4:
-                    b.bankdetaile();
-                    break;
-                default:
-                    System.out.println("Invalid choice.");
+                case 1: bank.deposit(); break;
+                case 2: bank.withdraw(); break;
+                case 3: ((BankService)bank).checkBalance(); break;
+                case 4: ((BankService)bank).showCustomerDetails(); break;
+                case 5: ((BankService)bank).showTransactionHistory(); break;
+                case 0: System.out.println("Thank You"); break;
+                default: System.out.println("Invalid choice");
             }
         } while (ch != 0);
     }
